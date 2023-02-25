@@ -8,6 +8,7 @@ import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.WebConnectionWrapper;
 import com.github.xucux.Browser;
+import com.github.xucux.util.DownUtils;
 import com.github.xucux.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -21,15 +22,15 @@ import java.io.IOException;
  * <pre> </pre>
  */
 @Slf4j
-public class ParsingMulti {
+public class ParsingUrl {
 
     private static final String PREFIX = "https://developer.lanzoug.com/file/";
 
-    public static ParsingMulti build() {
-        return new ParsingMulti(PREFIX);
+    public static ParsingUrl build() {
+        return new ParsingUrl(PREFIX);
     }
 
-    public ParsingMulti config(String prefix){
+    public ParsingUrl config(String prefix){
         if (StringUtils.isBlank(prefix)) {
             throw new RuntimeException("错误的前缀");
         }
@@ -37,7 +38,7 @@ public class ParsingMulti {
         return this;
     }
 
-    public ParsingMulti url(String url) {
+    public ParsingUrl url(String url) {
         if (StringUtils.isBlank(url)) {
             throw new RuntimeException("错误的地址");
         }
@@ -56,7 +57,7 @@ public class ParsingMulti {
 
     private String realUrl;
 
-    public ParsingMulti(String prefix) {
+    public ParsingUrl(String prefix) {
         this.prefix = prefix;
     }
 
@@ -80,7 +81,7 @@ public class ParsingMulti {
         return realUrl;
     }
 
-    public ParsingMulti go() throws IOException {
+    public ParsingUrl go() throws IOException {
         // 获取浏览器实例
         WebClient webClient = new WebClient();
         webClient.getOptions().setJavaScriptEnabled(true);

@@ -24,6 +24,10 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +46,7 @@ public class DownUtils {
      * @param filePath
      * @param fileName
      */
-    public static void downloadByNIO(String url, String filePath, String fileName) {
+    public static void down(String url, String filePath, String fileName) {
         try (InputStream ins = new URL(url).openStream()) {
             Path target = Paths.get(filePath, fileName);
             //设置获取全部权限
@@ -54,6 +58,19 @@ public class DownUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public static Executor executor = Executors.newFixedThreadPool(2);
+
+    /**
+     * 异步下载
+     * @param url
+     * @param filePath
+     * @param fileName
+     */
+    public static void asyncDown(String url, String filePath, String fileName){
+        executor.execute(()-> {
+            down(url, filePath, fileName);
+        });
     }
 }

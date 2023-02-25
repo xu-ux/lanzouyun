@@ -12,7 +12,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.WebConnectionWrapper;
 import com.github.xucux.Browser;
 import com.github.xucux.single.Parsing;
-import com.github.xucux.single.ParsingMulti;
+import com.github.xucux.single.ParsingUrl;
 import com.github.xucux.util.DownUtils;
 import com.github.xucux.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +31,8 @@ import java.util.List;
  */
 @Slf4j
 public class ParsingPwd {
+
+    private static final String SAVE_PATH = "D:\\Download\\lanzouyun\\";
 
     private static final String PREFIX = "https://developer.lanzoug.com/file/";
 
@@ -77,7 +79,7 @@ public class ParsingPwd {
 
     private String hostUrl;
 
-    private List<String> realUrl;
+    private List<String> realUrlList;
 
     public ParsingPwd(String prefix) {
         this.prefix = prefix;
@@ -95,6 +97,17 @@ public class ParsingPwd {
                 String data = response.getContentAsString();
                 if (contentType.contains("json")) {
                     log.debug(data);
+                    // 单个文件
+                    if(data.contains("\"zt\":1,\"dom\":\"https")) {
+                        JSONObject jsonObject= (JSONObject) JSON.parse(data);
+                        log.info(jsonObject.toJSONString());
+                        //解析得到下载链接
+                        String url = prefix + jsonObject.getString("url");
+                        String inf = jsonObject.getString("inf");
+                        String realUrl = HttpUtils.getRedirectUrl(url);
+                        DownUtils.down(realUrl,SAVE_PATH,inf);
+                    }
+                    // 多个文件
                     if(data.contains("\"info\":\"sucess\"")) {
                         JSONObject jsonObject = (JSONObject) JSON.parse(data);
                         log.info(jsonObject.toJSONString());
@@ -105,9 +118,9 @@ public class ParsingPwd {
                             textDtos.forEach(s -> {
                                 String singleUrl = hostUrl.concat("/").concat(s.getId());
                                 try {
-                                    ParsingMulti parsing = ParsingMulti.build().url(singleUrl).go();
+                                    ParsingUrl parsing = ParsingUrl.build().url(singleUrl).go();
                                     log.info("name:{} size:{} real url:{}",s.getNameAll(),s.getSize(),parsing.getRealUrl());
-                                    DownUtils.downloadByNIO(parsing.getRealUrl(),"D:\\Download\\lanzouyun\\",s.getNameAll());
+                                    DownUtils.asyncDown(parsing.getRealUrl(),SAVE_PATH,s.getNameAll());
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -124,8 +137,13 @@ public class ParsingPwd {
         // 加载页面
         HtmlPage page= webClient.getPage(url);
         page.executeJavaScript("document.getElementById(\"pwd\").value = '"+password+"'");
-        DomElement button = page.getElementById("sub");
-        button.click();
+        try {
+            DomElement button = page.getElementById("sub");
+            button.click();
+        } catch (Exception e) {
+            log.error("密码确认异常 {}",e.getMessage());
+            page.executeJavaScript("document.getElementsByClassName(\"passwddiv-btn\").click = down_p()");
+        }
         // Page nextPage =  page.getEnclosingWindow().getTopWindow().getEnclosedPage();
         webClient.waitForBackgroundJavaScript(30000);
         return null;
