@@ -2,6 +2,7 @@ package com.github.xucux.single;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
@@ -11,10 +12,7 @@ import com.github.xucux.util.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 /**
  * @descriptions: 解析
@@ -23,15 +21,15 @@ import java.net.URL;
  * <pre> </pre>
  */
 @Slf4j
-public class Parsing {
+public class ParsingMulti {
 
     private static final String PREFIX = "https://developer.lanzoug.com/file/";
 
-    public static Parsing build() {
-        return new Parsing(PREFIX);
+    public static ParsingMulti build() {
+        return new ParsingMulti(PREFIX);
     }
 
-    public Parsing config(String prefix){
+    public ParsingMulti config(String prefix){
         if (StringUtils.isBlank(prefix)) {
             throw new RuntimeException("错误的前缀");
         }
@@ -39,7 +37,7 @@ public class Parsing {
         return this;
     }
 
-    public Parsing url(String url) {
+    public ParsingMulti url(String url) {
         if (StringUtils.isBlank(url)) {
             throw new RuntimeException("错误的地址");
         }
@@ -58,7 +56,7 @@ public class Parsing {
 
     private String realUrl;
 
-    public Parsing(String prefix) {
+    public ParsingMulti(String prefix) {
         this.prefix = prefix;
     }
 
@@ -82,9 +80,15 @@ public class Parsing {
         return realUrl;
     }
 
-    public Parsing go() throws IOException {
+    public ParsingMulti go() throws IOException {
         // 获取浏览器实例
-        webClient = Browser.getInstance();
+        WebClient webClient = new WebClient();
+        webClient.getOptions().setJavaScriptEnabled(true);
+        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setThrowExceptionOnScriptError(false);
+        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        webClient.getOptions().setActiveXNative(false);
+        webClient.setAjaxController(new NicelyResynchronizingAjaxController());
         // 监听资源加载，这里的WebConnectionWrapper会监听所有资源加载
         webClient.setWebConnection(new WebConnectionWrapper(webClient){
             @Override
